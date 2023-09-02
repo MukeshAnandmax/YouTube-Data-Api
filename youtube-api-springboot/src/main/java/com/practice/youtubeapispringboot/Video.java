@@ -23,7 +23,7 @@ public class Video {
     private JSONObject thumbnailUrl;
     private String channelTitle;
     private String channelId;
-    private DateTime publishedDate;
+    //private DateTime publishedDate;
 
     private  String tag;
 

@@ -58,15 +58,19 @@ public class VideoThread extends Thread {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            // logger.warn("the response is{}"+response);
+             logger.warn("the response is{}"+response);
 
             List<SearchResult> items = response.getItems();
 
-            //logger.warn("the item in the response are{}"+items);
+            logger.warn("the item in the response are{}"+items);
 
             List<Video> videos = new ArrayList<>();
 
             for (SearchResult result : items) {
+
+                if(!result.getId().getKind().equals("youtube#video")){
+                    continue;
+                }
 
                 SearchResultSnippet snippet = result.getSnippet();
                 String videoId = result.getId().getVideoId();
@@ -100,7 +104,7 @@ public class VideoThread extends Thread {
                 video.setChannelId(channelId);
                 video.setChannelTitle(channelTitle);
                 video.setThumbnailUrl(thumbnails);
-                video.setPublishedDate(publishedAt);
+               // video.setPublishedDate(publishedAt);
                 video.setDescription(description);
                 video.setTitle(title);
                 video.setTag(this.keyword);
@@ -108,12 +112,16 @@ public class VideoThread extends Thread {
                 //youTubeRepository.save(video);
                 videos.add(video);
             }
-            youTubeRepository.saveAll(videos);
+            try {
+                youTubeRepository.saveAll(videos);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
             this.pageToken = response.getNextPageToken();
             logger.warn("Saved video in thread {} ",currentThread().getName());
 
             try {
-                Thread.sleep(20000);
+                Thread.sleep(60000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }

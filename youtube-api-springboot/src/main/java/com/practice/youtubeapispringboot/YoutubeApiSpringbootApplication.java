@@ -27,8 +27,9 @@ public class YoutubeApiSpringbootApplication implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws IOException, ParseException {
 
-		//videoService.loadVideosInDB("cricket");
-		videoService.fetchVideos(keywords);
+//		videoService.initDB();
+//		//videoService.loadVideosInDB("cricket");
+//		videoService.fetchVideos(keywords);
 
 
 	}
