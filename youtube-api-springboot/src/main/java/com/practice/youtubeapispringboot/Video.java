@@ -25,6 +25,8 @@ public class Video {
     private String channelId;
     private DateTime publishedDate;
 
+    private  String tag;
+
 
 
 }

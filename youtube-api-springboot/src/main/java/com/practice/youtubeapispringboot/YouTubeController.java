@@ -15,9 +15,9 @@ public class YouTubeController {
 
 
     @GetMapping("/get_videos")
-    public List<Video> getVideos(@RequestParam("query") String query,
+    public List<Video> getVideos(@RequestParam("keyword") String keyword,
                                  @RequestParam(value = "pageNo",required = false,defaultValue = "1")  int pageNo,
                                  @RequestParam(value = "pageSize",required = false,defaultValue = "10") int pageSize ){
-        return youTubeRepository.getVideos(query,pageNo,pageSize);
+        return youTubeRepository.getVideos(keyword,pageNo,pageSize);
     }
 }

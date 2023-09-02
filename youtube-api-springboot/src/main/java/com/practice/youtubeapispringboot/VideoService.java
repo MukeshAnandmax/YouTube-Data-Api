@@ -52,10 +52,8 @@ public class VideoService {
 
     public void fetchVideos(List<String> keywords){
 
-        VideoThread[] threads = new VideoThread[keywords.size()];
-
         for(int i=0;i<keywords.size();i++){
-            VideoThread thread = new VideoThread(keywords.get(i),this.youTubeRepository,this.youTube,this.api_key);
+            VideoThread thread = new VideoThread(keywords.get(i),youTubeRepository,this.youTube,this.api_key);
             thread.start();
         }
 

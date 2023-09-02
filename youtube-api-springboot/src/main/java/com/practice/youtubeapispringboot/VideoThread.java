@@ -8,67 +8,72 @@ import com.google.api.services.youtube.model.SearchResultSnippet;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VideoThread extends  Thread {
+public class VideoThread extends Thread {
 
+    private Logger logger = LoggerFactory.getLogger(VideoThread.class);
 
-   private String keyword;
+    private String keyword;
     private List<Video> videos;
     private String api_key;
     private YouTube youTube;
     private YouTubeRepository youTubeRepository;
     private String pageToken;
 
-    public VideoThread(String keyword, YouTubeRepository youTubeRepository,YouTube youTube,String api_key) {
+    public VideoThread(String keyword, YouTubeRepository youTubeRepository, YouTube youTube, String api_key) {
         this.keyword = keyword;
         this.youTubeRepository = youTubeRepository;
         this.youTube = youTube;
-        this.api_key=api_key;
+        this.api_key = api_key;
     }
 
     @Override
     public void run() {
         //fetching the data from youtube &saving the data
+        int i = 0;
+        while (i++ < 10) {
 
-        YouTube.Search.List searchList = null;
-        try {
-            searchList = this.youTube.search().list("id,snippet");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+            YouTube.Search.List searchList = null;
+            try {
+                searchList = this.youTube.search().list("id,snippet");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
 
-        searchList.setKey(this.api_key);
-        searchList.setQ(keyword);
-        searchList.setMaxResults(5L);
-        searchList.setPageToken(this.pageToken);
+            searchList.setKey(this.api_key);
+            searchList.setQ(keyword);
+            searchList.setMaxResults(10L);
+            searchList.setPageToken(this.pageToken);
 
-        SearchListResponse response = null;
-        try {
-            response = searchList.execute();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        // logger.warn("the response is{}"+response);
+            SearchListResponse response = null;
+            try {
+                response = searchList.execute();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            // logger.warn("the response is{}"+response);
 
-        List<SearchResult> items = response.getItems();
+            List<SearchResult> items = response.getItems();
 
-        //logger.warn("the item in the response are{}"+items);
+            //logger.warn("the item in the response are{}"+items);
 
-        List<Video> videos = new ArrayList<>();
+            List<Video> videos = new ArrayList<>();
 
-        for (SearchResult result : items) {
+            for (SearchResult result : items) {
 
-            SearchResultSnippet snippet = result.getSnippet();
-            String videoId = result.getId().getVideoId();
-            String channelId = snippet.getChannelId();
-            String channelTitle = snippet.getChannelTitle();
-            String title = snippet.getTitle();
-            String description = snippet.getDescription();
+                SearchResultSnippet snippet = result.getSnippet();
+                String videoId = result.getId().getVideoId();
+                String channelId = snippet.getChannelId();
+                String channelTitle = snippet.getChannelTitle();
+                String title = snippet.getTitle();
+                String description = snippet.getDescription();
 
            /* ThumbnailDetails thumbnails = snippet.getThumbnails();
             String lowurl = thumbnails.getDefault().getUrl();
@@ -80,29 +85,38 @@ public class VideoThread extends  Thread {
             thumbnailses.put("high",highurl);
             */
 
-            JSONObject thumbnails = null;
+                JSONObject thumbnails = null;
+                try {
+                    thumbnails = (JSONObject) JSONValue.parseWithException(snippet.getThumbnails().toString());
+                } catch (ParseException e) {
+                    throw new RuntimeException(e);
+                }
+
+                DateTime publishedAt = snippet.getPublishedAt();
+
+                Video video = new Video();
+
+                video.setVideoId(videoId);
+                video.setChannelId(channelId);
+                video.setChannelTitle(channelTitle);
+                video.setThumbnailUrl(thumbnails);
+                video.setPublishedDate(publishedAt);
+                video.setDescription(description);
+                video.setTitle(title);
+                video.setTag(this.keyword);
+
+                //youTubeRepository.save(video);
+                videos.add(video);
+            }
+            youTubeRepository.saveAll(videos);
+            this.pageToken = response.getNextPageToken();
+            logger.warn("Saved video in thread {} ",currentThread().getName());
+
             try {
-                thumbnails = (JSONObject) JSONValue.parseWithException(snippet.getThumbnails().toString());
-            } catch (ParseException e) {
+                Thread.sleep(20000);
+            } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-
-            DateTime publishedAt = snippet.getPublishedAt();
-
-            Video video = new Video();
-
-            video.setVideoId(videoId);
-            video.setChannelId(channelId);
-            video.setChannelTitle(channelTitle);
-            video.setThumbnailUrl(thumbnails);
-            video.setPublishedDate(publishedAt);
-            video.setDescription(description);
-            video.setTitle(title);
-
-            //youTubeRepository.save(video);
-            videos.add(video);
         }
-        youTubeRepository.saveAll(videos);
-        this.pageToken =  response.getNextPageToken();
     }
 }
